@@ -50,36 +50,6 @@
             endingLineNumber = "523"
             landmarkName = "sendConfigRequest()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "7FB0FDE0-A336-4DB6-84C4-7542791D2F0C - acf9ce6054d74de8"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "523"
-                  endingLineNumber = "523">
-               </Location>
-               <Location
-                  uuid = "7FB0FDE0-A336-4DB6-84C4-7542791D2F0C - acf9ce6054d74de8"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "523"
-                  endingLineNumber = "523">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -96,36 +66,6 @@
             endingLineNumber = "517"
             landmarkName = "sendConfigRequest()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "A8A01FCB-AE85-4FE6-93FD-FD6AFBED9DC1 - acf9ce6054d772b6"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "517"
-                  endingLineNumber = "517">
-               </Location>
-               <Location
-                  uuid = "A8A01FCB-AE85-4FE6-93FD-FD6AFBED9DC1 - acf9ce6054d772b6"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "517"
-                  endingLineNumber = "517">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -142,50 +82,6 @@
             endingLineNumber = "543"
             landmarkName = "sendConfigRequest()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "E1EFBF1F-D953-4B21-99F9-F0DC3E8B41AB - 62f14745d210e232"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ChickCare.SplashViewModel.setModeToFuntik() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "544"
-                  endingLineNumber = "544">
-               </Location>
-               <Location
-                  uuid = "E1EFBF1F-D953-4B21-99F9-F0DC3E8B41AB - 62f14745d210e232"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ChickCare.SplashViewModel.setModeToFuntik() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "544"
-                  endingLineNumber = "544">
-               </Location>
-               <Location
-                  uuid = "E1EFBF1F-D953-4B21-99F9-F0DC3E8B41AB - acf9ce6054d74f1c"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "543"
-                  endingLineNumber = "543">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -202,64 +98,6 @@
             endingLineNumber = "547"
             landmarkName = "sendConfigRequest()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "6EE542F1-8789-4D0C-A9E6-E7737523DBAA - 62f14745d210e391"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ChickCare.SplashViewModel.setModeToFuntik() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "547"
-                  endingLineNumber = "547">
-               </Location>
-               <Location
-                  uuid = "6EE542F1-8789-4D0C-A9E6-E7737523DBAA - 9897c8bd701f95cb"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in ChickCare.SplashViewModel.setModeToFuntik() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "547"
-                  endingLineNumber = "547">
-               </Location>
-               <Location
-                  uuid = "6EE542F1-8789-4D0C-A9E6-E7737523DBAA - 62f14745d210e391"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "ChickCare.SplashViewModel.setModeToFuntik() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "547"
-                  endingLineNumber = "547">
-               </Location>
-               <Location
-                  uuid = "6EE542F1-8789-4D0C-A9E6-E7737523DBAA - acf9ce6054d74e90"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Swift.MainActor () -&gt; () in closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;__C.NSURLResponse&gt;, Swift.Optional&lt;Swift.Error&gt;) -&gt; () in ChickCare.SplashViewModel.sendConfigRequest() -&gt; ()"
-                  moduleName = "ChickCare.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/antondanilov/Desktop/ChickenCare/ChickenCare/ContentView.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "547"
-                  endingLineNumber = "547">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
