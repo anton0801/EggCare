@@ -37,15 +37,9 @@ workflows:
           agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
       - name: Build ipa for distribution
         script: |
-          echo "Building IPA..."
           xcode-project build-ipa \
             --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --verbose \
-            --additional-build-settings \
-              COMPILER_INDEX_STORE_ENABLE=NO \
-              SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
-              CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF=NO
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
