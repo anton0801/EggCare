@@ -5,6 +5,7 @@ import FirebaseMessaging
 import UserNotifications
 import WebKit
 import Network
+import AppTrackingTransparency
 
 class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, MessagingDelegate, UNUserNotificationCenterDelegate {
     
@@ -29,7 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         UNUserNotificationCenter.current().delegate = self
         
         // Register for remote notifications
-        application.registerForRemoteNotifications()
+        // application.registerForRemoteNotifications()
         
         // Handle launch from notification
         if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
@@ -45,7 +46,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         }
         monitor.start(queue: DispatchQueue.global())
         
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(activateApps),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        
         return true
+    }
+    
+    
+    @objc private func activateApps() {
+        AppsFlyerLib.shared().start()
+        if #available(iOS 14, *) {
+            ATTrackingManager.requestTrackingAuthorization { status in
+            }
+        }
     }
     
     // AppsFlyer Delegate Methods
@@ -379,7 +397,7 @@ class SplashViewModel: ObservableObject {
     @Published var webViewURL: URL?
     @Published var showNotificationScreen = false
     
-    private var conversionData: [AnyHashable: Any]?
+    private var conversionData: [AnyHashable: Any] = [:]
     private var isFirstLaunch: Bool {
         !UserDefaults.standard.bool(forKey: "hasLaunched")
     }
@@ -414,7 +432,7 @@ class SplashViewModel: ObservableObject {
                 if path.status != .satisfied {
                     self.handleNoInternet()
                 } else {
-                    self.checkExpiresAndRequest()
+                    // self.checkExpiresAndRequest()
                 }
             }
         }
@@ -422,12 +440,15 @@ class SplashViewModel: ObservableObject {
     }
     
     @objc private func handleConversionData(_ notification: Notification) {
-        conversionData = (notification.userInfo ?? [:])["conversionData"] as? [AnyHashable: Any]
-        processConversionData()
+        conversionData = (notification.userInfo ?? [:])["conversionData"] as? [AnyHashable: Any] ?? [:]
+        if !UserDefaults.standard.bool(forKey: "accepted_notifications") {
+            checkAndShowNotificationScreen()
+        } else {
+            processConversionData()
+        }
     }
     
     @objc private func handleConversionError(_ notification: Notification) {
-        print("Conversion error: \(String(describing: notification.object))")
         handleConfigError()
     }
     
@@ -435,7 +456,7 @@ class SplashViewModel: ObservableObject {
         // Trigger new config request on token update
         if let token = notification.object as? String {
             UserDefaults.standard.set(token, forKey: "fcm_token")
-            sendConfigRequest()
+            // sendConfigRequest()
         }
     }
     
@@ -454,23 +475,10 @@ class SplashViewModel: ObservableObject {
     }
     
     private func processConversionData() {
-        guard let data = conversionData else { return }
+        guard !conversionData.isEmpty else { return }
         
         if isFirstLaunch {
-            if let afStatus = data["af_status"] as? String, afStatus == "Organic" {
-                // Retry after 5 seconds
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-//                    AppsFlyerLib.shared().performRequestForConversionData { successData, error in
-//                        if let successData = successData {
-//                            self.conversionData = successData
-//                            self.sendConfigRequest()
-//                        } else {
-//                            print("Retry failed: \(String(describing: error))")
-//                            self.setModeToFuntik()
-//                        }
-//                    }
-//                }
-//                return
+            if let afStatus = conversionData["af_status"] as? String, afStatus == "Organic" {
             }
         }
         
@@ -487,7 +495,7 @@ class SplashViewModel: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        var body = conversionData ?? [:]
+        var body = conversionData
         body["af_id"] = AppsFlyerLib.shared().getAppsFlyerUID()
         body["bundle_id"] = Bundle.main.bundleIdentifier ?? "com.example.app"
         body["os"] = "iOS"
@@ -499,15 +507,13 @@ class SplashViewModel: ObservableObject {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         } catch {
-            print("JSON serialization error: \(error)")
             handleConfigError()
             return
         }
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
-                if let error = error {
-                    print("Request error: \(error)")
+                if let _ = error {
                     self.handleConfigError()
                     return
                 }
@@ -538,7 +544,6 @@ class SplashViewModel: ObservableObject {
                         }
                     }
                 } catch {
-                    print("JSON parse error: \(error)")
                     self.handleConfigError()
                 }
             }
@@ -573,23 +578,22 @@ class SplashViewModel: ObservableObject {
         }
     }
     
-    private func checkExpiresAndRequest() {
-        if let expires = UserDefaults.standard.value(forKey: "saved_expires") as? TimeInterval,
-           expires < Date().timeIntervalSince1970 {
-            sendConfigRequest()
-        } else if let savedURL = UserDefaults.standard.string(forKey: "saved_url"),
-                  let url = URL(string: savedURL) {
-            webViewURL = url
-            currentScreen = .webView
-        } else {
-            // Wait for conversion data if not yet received
-            if conversionData == nil {
-                currentScreen = .loading
-            } else {
-                sendConfigRequest()
-            }
-        }
-    }
+//    private func checkExpiresAndRequest() {
+//        if let expires = UserDefaults.standard.value(forKey: "saved_expires") as? TimeInterval,
+//           expires < Date().timeIntervalSince1970 {
+//            sendConfigRequest()
+//        } else if let savedURL = UserDefaults.standard.string(forKey: "saved_url"),
+//                  let url = URL(string: savedURL) {
+//            webViewURL = url
+//            currentScreen = .webView
+//        } else {
+//            if conversionData == nil {
+//                currentScreen = .loading
+//            } else {
+//                sendConfigRequest()
+//            }
+//        }
+//    }
     
     private func checkAndShowNotificationScreen() {
         if let lastAsk = UserDefaults.standard.value(forKey: "last_notification_ask") as? Date,
@@ -603,10 +607,13 @@ class SplashViewModel: ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             DispatchQueue.main.async {
                 if granted {
+                    UserDefaults.standard.set(true, forKey: "accepted_notifications")
                     UIApplication.shared.registerForRemoteNotifications()
                 } else {
+                    UserDefaults.standard.set(false, forKey: "accepted_notifications")
                     UserDefaults.standard.set(Date(), forKey: "last_notification_ask")
                 }
+                self.sendConfigRequest()
                 self.showNotificationScreen = false
                 if let error = error {
                     print("Permission error: \(error)")
@@ -622,36 +629,63 @@ struct SplashView: View {
     @StateObject private var viewModel = SplashViewModel()
     
     var body: some View {
-        Group {
-            switch viewModel.currentScreen {
-            case .loading:
-                ProgressView("Loading...")
-            case .webView:
-                if let url = viewModel.webViewURL {
-                    MainBrowserView(destinationLink: url)
-                } else {
-                    Text("Error loading URL")
-                }
-            case .funtik:
-                ContentView()
-                    .environmentObject(appState)
-            case .noInternet:
-                NoInternetView {
-                    NotificationCenter.default.post(name: NSNotification.Name("RetryConfig"), object: nil)
+        ZStack {
+            if viewModel.showNotificationScreen {
+                NotificationPermissionView(
+                    onYes: {
+                        viewModel.requestNotificationPermission()
+                    },
+                    onSkip: {
+                        viewModel.showNotificationScreen = false
+                    }
+                )
+            } else {
+                switch viewModel.currentScreen {
+                case .loading:
+                    splashScreen
+                case .webView:
+                    if let url = viewModel.webViewURL {
+                        MainBrowserView(destinationLink: url)
+                    } else {
+                        ContentView()
+                            .environmentObject(appState)
+                    }
+                case .funtik:
+                    ContentView()
+                        .environmentObject(appState)
+                case .noInternet:
+                    NoInternetView {
+                        NotificationCenter.default.post(name: NSNotification.Name("RetryConfig"), object: nil)
+                    }
                 }
             }
         }
-        .sheet(isPresented: $viewModel.showNotificationScreen) {
-            NotificationPermissionView(
-                onYes: {
-                    viewModel.requestNotificationPermission()
-                },
-                onSkip: {
-                    viewModel.showNotificationScreen = false
+    }
+    
+    private var splashScreen: some View {
+        ZStack {
+            Image("splash_back")
+                .resizable()
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
+                
+                HStack {
+                    Image("loading_ic")
+                        .resizable()
+                        .frame(width: 150, height: 25)
+                    ProgressView()
+                        .foregroundColor(.white)
                 }
-            )
+                
+                Spacer()
+                    .frame(height: 100)
+            }
         }
     }
+    
 }
 
 // Main App
@@ -675,7 +709,7 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeDashboardView()
+            HomeDashboardView(selectedTab: $selectedTab)
                 .tabItem {
                     VStack {
                         Image(systemName: "house")
@@ -729,6 +763,7 @@ struct ContentView: View {
 // Home Dashboard
 struct HomeDashboardView: View {
     @EnvironmentObject var appState: AppState
+    @Binding var selectedTab: String
     
     var body: some View {
         ScrollView {
@@ -802,10 +837,24 @@ struct HomeDashboardView: View {
                     .padding(.horizontal)
                 
                 HStack(spacing: 16) {
-                    QuickActionButton(icon: "chicken.fill", title: "Add Chicken")
-                    QuickActionButton(icon: "snowflake", title: "Check Freshness")
+                    Button {
+                        selectedTab = "chickens"
+                    } label: {
+                        QuickActionButton(icon: "chicken.fill", title: "Add Chicken")
+                    }
+                    Button {
+                        selectedTab = "freshness"
+                    } label: {
+                        QuickActionButton(icon: "snowflake", title: "Check Freshness")
+                    }
                 }
                 .padding(.horizontal)
+                Button {
+                    UIApplication.shared.open(URL(string: "https://eggcarre.com/privacy-policy.html")!)
+                } label: {
+                    QuickActionButton(icon: "lock", title: "Privacy Policy")
+                        .padding(.horizontal)
+                }
             }
             .padding(.vertical)
         }
@@ -1615,6 +1664,10 @@ struct StatCard: View {
 class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, NotificationProcessor {
     private let contentManager: ContentManager
     private let actionBroadcaster = ActionBroadcaster()
+    
+    private var redirectCount: Int = 0
+    private let maxRedirects: Int = 70 // Для тестов
+    private var lastValidURL: URL?
 
     func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         let space = challenge.protectionSpace
@@ -1668,7 +1721,23 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
     }
     
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        redirectCount += 1
+        if redirectCount > maxRedirects {
+            webView.stopLoading()
+            if let fallbackURL = lastValidURL {
+                webView.load(URLRequest(url: fallbackURL))
+            }
+            return
+        }
+        lastValidURL = webView.url // Сохраняем последний рабочий URL
         saveCookies(from: webView)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        if (error as NSError).code == NSURLErrorHTTPTooManyRedirects, let fallbackURL = lastValidURL {
+            webView.load(URLRequest(url: fallbackURL))
+        }
+        // Можно показать UI с ошибкой или лог для тестов
     }
     
     func webView(
@@ -1681,13 +1750,21 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
             return
         }
         
-        let externalSchemes = ["tg://", "viber://", "whatsapp://"]
-        if externalSchemes.contains(where: link.absoluteString.hasPrefix) {
+        if link.absoluteString.starts(with: "http") || link.absoluteString.starts(with: "https") {
+            lastValidURL = link
+            decisionHandler(.allow)
+        } else {
             UIApplication.shared.open(link, options: [:], completionHandler: nil)
             decisionHandler(.cancel)
-        } else {
-            decisionHandler(.allow)
         }
+        
+//        let externalSchemes = ["tg://", "viber://", "whatsapp://"]
+//        if externalSchemes.contains(where: link.absoluteString.hasPrefix) {
+//            UIApplication.shared.open(link, options: [:], completionHandler: nil)
+//            decisionHandler(.cancel)
+//        } else {
+//            decisionHandler(.allow)
+//        }
     }
     
     @objc func processNotification(_ notification: Notification) {
@@ -1706,6 +1783,9 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
     private func setupNewBrowser(_ browser: WKWebView) {
         browser.translatesAutoresizingMaskIntoConstraints = false
         browser.scrollView.isScrollEnabled = true
+        browser.scrollView.minimumZoomScale = 1.0
+        browser.scrollView.maximumZoomScale = 1.0
+        browser.scrollView.bouncesZoom = false
         browser.navigationDelegate = self
         browser.uiDelegate = self
         contentManager.primaryBrowser.addSubview(browser)
@@ -1818,6 +1898,9 @@ class ContentManager: ObservableObject {
     
     func setupPrimaryBrowser() {
         primaryBrowser = BrowserCreator.createPrimaryBrowser()
+        primaryBrowser.scrollView.minimumZoomScale = 1.0
+        primaryBrowser.scrollView.maximumZoomScale = 1.0
+        primaryBrowser.scrollView.bouncesZoom = false
         primaryBrowser.allowsBackForwardNavigationGestures = true
     }
     
@@ -1851,6 +1934,7 @@ struct MainBrowserView: UIViewRepresentable {
         manager.setupPrimaryBrowser()
         manager.primaryBrowser.uiDelegate = context.coordinator
         manager.primaryBrowser.navigationDelegate = context.coordinator
+        
         manager.loadStoredCookies()
         return manager.primaryBrowser
     }
@@ -1862,6 +1946,7 @@ struct MainBrowserView: UIViewRepresentable {
     func makeCoordinator() -> BrowserDelegateManager {
         BrowserDelegateManager(manager: manager)
     }
+    
 }
 
 struct NavigationPanel: View {
