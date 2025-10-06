@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8F0A5F472E8FE76E00D9D970 /* AppsFlyerLib in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F462E8FE76E00D9D970 /* AppsFlyerLib */; };
+		8F0A5F4A2E8FE79200D9D970 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F492E8FE79200D9D970 /* FirebaseAnalytics */; };
+		8F0A5F4C2E8FE79200D9D970 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F4B2E8FE79200D9D970 /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8F0A5C802E86E2F800D9D970 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +33,7 @@
 		8F0A5C712E86E2F600D9D970 /* ChickCare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChickCare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A5C7F2E86E2F800D9D970 /* ChickCareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickCareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A5C892E86E2F800D9D970 /* ChickCareUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickCareUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F0A5F4D2E8FECAB00D9D970 /* ChickCare-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ChickCare-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +59,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F0A5F4C2E8FE79200D9D970 /* FirebaseMessaging in Frameworks */,
+				8F0A5F4A2E8FE79200D9D970 /* FirebaseAnalytics in Frameworks */,
+				8F0A5F472E8FE76E00D9D970 /* AppsFlyerLib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +85,7 @@
 		8F0A5C682E86E2F600D9D970 = {
 			isa = PBXGroup;
 			children = (
+				8F0A5F4D2E8FECAB00D9D970 /* ChickCare-Info.plist */,
 				8F0A5C732E86E2F600D9D970 /* ChickenCare */,
 				8F0A5C822E86E2F800D9D970 /* ChickenCareTests */,
 				8F0A5C8C2E86E2F800D9D970 /* ChickenCareUITests */,
@@ -112,6 +123,9 @@
 			);
 			name = ChickCare;
 			packageProductDependencies = (
+				8F0A5F462E8FE76E00D9D970 /* AppsFlyerLib */,
+				8F0A5F492E8FE79200D9D970 /* FirebaseAnalytics */,
+				8F0A5F4B2E8FE79200D9D970 /* FirebaseMessaging */,
 			);
 			productName = ChickenCare;
 			productReference = 8F0A5C712E86E2F600D9D970 /* ChickCare.app */;
@@ -195,6 +209,10 @@
 			);
 			mainGroup = 8F0A5C682E86E2F600D9D970;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8F0A5F452E8FE76E00D9D970 /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */,
+				8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8F0A5C722E86E2F600D9D970 /* Products */;
 			projectDirPath = "";
@@ -391,9 +409,13 @@
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4CV2BU7AC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ChickCare-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Egg Care";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to this app use your camera.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your activity is used only to provide personalized app content and improve your experience. We do not share or sell your data.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -404,12 +426,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.3;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -430,9 +452,13 @@
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K4CV2BU7AC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ChickCare-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Egg Care";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Allow to this app use your camera.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "Your activity is used only to provide personalized app content and improve your experience. We do not share or sell your data.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -443,12 +469,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.3;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare24;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -587,6 +613,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8F0A5F452E8FE76E00D9D970 /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AppsFlyerSDK/AppsFlyerFramework";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.17.6;
+			};
+		};
+		8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8F0A5F462E8FE76E00D9D970 /* AppsFlyerLib */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F0A5F452E8FE76E00D9D970 /* XCRemoteSwiftPackageReference "AppsFlyerFramework" */;
+			productName = AppsFlyerLib;
+		};
+		8F0A5F492E8FE79200D9D970 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		8F0A5F4B2E8FE79200D9D970 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8F0A5C692E86E2F600D9D970 /* Project object */;
 }

