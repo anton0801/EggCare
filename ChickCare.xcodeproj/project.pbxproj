@@ -409,7 +409,7 @@
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
-				DEVELOPMENT_TEAM = K4CV2BU7AC;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ChickCare-Info.plist";
@@ -452,7 +452,7 @@
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
-				DEVELOPMENT_TEAM = K4CV2BU7AC;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ChickCare-Info.plist";
