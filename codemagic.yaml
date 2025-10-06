@@ -30,40 +30,11 @@ workflows:
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
       - name: Increment build number
-        script: |
+        script: | 
           #!/bin/sh
           cd $CM_BUILD_DIR
-          echo "Current directory: $(pwd)"
-          
-          # Проверяем наличие Info.plist
-          INFO_PLIST_PATH="ChickCare/Info.plist"
-          if [ ! -f "$INFO_PLIST_PATH" ]; then
-            echo "Error: Info.plist not found at $INFO_PLIST_PATH"
-            find . -name Info.plist
-            exit 1
-          fi
-          
-          # Проверяем текущее значение
-          echo "Before update:"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST_PATH" || echo "No CFBundleVersion found"
-          
-          # Получаем последний билд из App Store Connect
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
-          NEW_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
-          echo "Latest build number: $LATEST_BUILD_NUMBER, Setting new: $NEW_BUILD_NUMBER"
-          
-          # Обновляем через agvtool
-          agvtool new-version -all $NEW_BUILD_NUMBER
-          
-          # Принудительно обновляем Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD_NUMBER" "$INFO_PLIST_PATH"
-          
-          # Проверяем после обновления
-          echo "After update:"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST_PATH"
-          
-          # Дополнительно проверяем Info.plist в финальной сборке
-          cat "$INFO_PLIST_PATH"
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
       - name: Build ipa for distribution
         script: |
           echo "Building IPA..."
