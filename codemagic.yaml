@@ -16,16 +16,12 @@ workflows:
         XCODE_PROJECT: "ChickCare.xcodeproj"
         XCODE_SCHEME: "ChickCare"
     scripts:
-      - name: Clean build folder
+      - name: Clean and Resolve SPM Dependencies
         script: |
-          echo "Cleaning build artifacts..."
+          # Очистка для избежания проблем с кэшем
           rm -rf ~/Library/Developer/Xcode/DerivedData
           rm -rf .build
-          rm -rf build/
           xcodebuild clean -project "$CM_BUILD_DIR/$XCODE_PROJECT" -scheme "$XCODE_SCHEME"
-      - name: Resolve SPM Dependencies
-        script: |
-          echo "Resolving SPM dependencies..."
           xcodebuild -resolvePackageDependencies -project "$CM_BUILD_DIR/$XCODE_PROJECT" -scheme "$XCODE_SCHEME"
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
