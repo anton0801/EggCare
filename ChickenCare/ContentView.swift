@@ -355,35 +355,65 @@ struct NotificationPermissionView: View {
     var onSkip: () -> Void
     
     var body: some View {
-        ZStack {
-            Image("notifications_back")
-                .resizable()
-                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                .ignoresSafeArea()
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
             
-            VStack {
-                Spacer()
-                
-                Button {
-                    onYes()
-                } label: {
-                    Image("want_btn")
+            ZStack {
+                if isLandscape {
+                    Image("splash_back_land")
                         .resizable()
-                        .frame(width: 350, height: 70)
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .ignoresSafeArea()
+                } else {
+                    Image("notifications_back")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .ignoresSafeArea()
                 }
                 
-                Button {
-                    onSkip()
-                } label: {
-                    Image("skip_btn")
-                        .resizable()
-                        .frame(width: 50, height: 20)
+                VStack(spacing: isLandscape ? 10 : 20) {
+                    Spacer()
+                    
+                    if isLandscape {
+                        Image("title_1")
+                            .resizable()
+                            .frame(width: 520, height: 20)
+                        Image("title_2")
+                            .resizable()
+                            .frame(width: 450, height: 20)
+                            .padding(.bottom)
+                    }
+                    
+                    Button(action: onYes) {
+                        Image("want_btn")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(
+                                width: isLandscape ? geometry.size.width * 0.6 : 350,
+                                height: isLandscape ? 50 : 70
+                            )
+                    }
+                    
+                    Button(action: onSkip) {
+                        Image("skip_btn")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(
+                                width: isLandscape ? geometry.size.width * 0.2 : 50,
+                                height: isLandscape ? 15 : 20
+                            )
+                    }
+                    
+                    Spacer()
+                        .frame(height: isLandscape ? 20 : 10)
                 }
-                
-                Spacer()
-                    .frame(height: 50)
+                .padding(.horizontal, isLandscape ? 20 : 0)
             }
+            
         }
+        .ignoresSafeArea()
     }
 }
 
@@ -441,11 +471,7 @@ class SplashViewModel: ObservableObject {
     
     @objc private func handleConversionData(_ notification: Notification) {
         conversionData = (notification.userInfo ?? [:])["conversionData"] as? [AnyHashable: Any] ?? [:]
-        if !UserDefaults.standard.bool(forKey: "accepted_notifications") {
-            checkAndShowNotificationScreen()
-        } else {
-            processConversionData()
-        }
+        processConversionData()
     }
     
     @objc private func handleConversionError(_ notification: Notification) {
@@ -479,10 +505,16 @@ class SplashViewModel: ObservableObject {
         
         if isFirstLaunch {
             if let afStatus = conversionData["af_status"] as? String, afStatus == "Organic" {
+                self.setModeToFuntik()
+                return
             }
         }
         
-        sendConfigRequest()
+        if !UserDefaults.standard.bool(forKey: "accepted_notifications") {
+            checkAndShowNotificationScreen()
+        } else {
+            sendConfigRequest()
+        }
     }
     
     private func sendConfigRequest() {
@@ -663,29 +695,50 @@ struct SplashView: View {
     }
     
     private var splashScreen: some View {
-        ZStack {
-            Image("splash_back")
-                .resizable()
-                .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                .ignoresSafeArea()
+        GeometryReader { geometry in
+            let isLandscape = geometry.size.width > geometry.size.height
             
-            VStack {
-                Spacer()
+            ZStack {
+                if isLandscape {
+                    Image("splash_back_land")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .ignoresSafeArea()
+                } else {
+                    Image("splash_back")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .ignoresSafeArea()
+                }
                 
-                HStack {
+                VStack {
+                    Spacer()
+                    
                     Image("loading_ic")
                         .resizable()
                         .frame(width: 150, height: 25)
-                    ProgressView()
-                        .foregroundColor(.white)
+                    
+                    Spacer()
+                        .frame(height: isLandscape ? 30 : 100)
                 }
-                
-                Spacer()
-                    .frame(height: 100)
             }
+            
         }
+        .ignoresSafeArea()
     }
     
+}
+
+
+#Preview {
+    NotificationPermissionView(
+        onYes: {
+        },
+        onSkip: {
+        }
+    )
 }
 
 // Main App
