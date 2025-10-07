@@ -73,10 +73,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
     }
     
     func onConversionDataFail(_ error: Error) {
-        // Handle error, perhaps fallback to funtik
-        if UserDefaults.standard.string(forKey: "saved_url") == nil {
-            setModeToFuntik()
-        }
+        NotificationCenter.default.post(name: Notification.Name("ConversionDataReceived"), object: nil, userInfo: ["conversionData": [:]])
+//        if UserDefaults.standard.string(forKey: "saved_url") == nil {
+//            setModeToFuntik()
+//        }
     }
     
     private func handleConfigError() {
@@ -107,7 +107,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         }
     }
     
-    // Firebase Messaging Delegate
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         // Upon token update, send new request
         messaging.token { token, error in
@@ -505,19 +504,19 @@ class SplashViewModel: ObservableObject {
         
         if isFirstLaunch {
             if let afStatus = conversionData["af_status"] as? String, afStatus == "Organic" {
-                self.setModeToFuntik()
-                return
+//                self.setModeToFuntik()
+//                return
             }
         }
         
-        if !UserDefaults.standard.bool(forKey: "accepted_notifications") {
+        if !UserDefaults.standard.bool(forKey: "accepted_notifications") && !UserDefaults.standard.bool(forKey: "system_close_notifications") {
             checkAndShowNotificationScreen()
         } else {
             sendConfigRequest()
         }
     }
     
-    private func sendConfigRequest() {
+    func sendConfigRequest() {
         guard let url = URL(string: "https://eggcarre.com/config.php") else {
             handleConfigError()
             return
@@ -630,6 +629,7 @@ class SplashViewModel: ObservableObject {
     private func checkAndShowNotificationScreen() {
         if let lastAsk = UserDefaults.standard.value(forKey: "last_notification_ask") as? Date,
            Date().timeIntervalSince(lastAsk) < 259200 {
+            sendConfigRequest()
             return
         }
         showNotificationScreen = true
@@ -643,7 +643,7 @@ class SplashViewModel: ObservableObject {
                     UIApplication.shared.registerForRemoteNotifications()
                 } else {
                     UserDefaults.standard.set(false, forKey: "accepted_notifications")
-                    UserDefaults.standard.set(Date(), forKey: "last_notification_ask")
+                    UserDefaults.standard.set(true, forKey: "system_close_notifications")
                 }
                 self.sendConfigRequest()
                 self.showNotificationScreen = false
@@ -662,22 +662,29 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
+            if viewModel.currentScreen == .loading || viewModel.showNotificationScreen {
+                splashScreen
+            }
+            
             if viewModel.showNotificationScreen {
                 NotificationPermissionView(
                     onYes: {
                         viewModel.requestNotificationPermission()
                     },
                     onSkip: {
+                        UserDefaults.standard.set(Date(), forKey: "last_notification_ask")
                         viewModel.showNotificationScreen = false
+                        viewModel.sendConfigRequest()
                     }
                 )
             } else {
                 switch viewModel.currentScreen {
                 case .loading:
-                    splashScreen
+                    EmptyView()
                 case .webView:
                     if let url = viewModel.webViewURL {
-                        MainBrowserView(destinationLink: url)
+                        CoreInterfaceView()
+                        // MainBrowserView(destinationLink: url)
                     } else {
                         ContentView()
                             .environmentObject(appState)
@@ -693,6 +700,8 @@ struct SplashView: View {
             }
         }
     }
+    
+    @State private var animate = false
     
     private var splashScreen: some View {
         GeometryReader { geometry in
@@ -716,9 +725,24 @@ struct SplashView: View {
                 VStack {
                     Spacer()
                     
-                    Image("loading_ic")
-                        .resizable()
-                        .frame(width: 150, height: 25)
+                    HStack(alignment: .bottom) {
+                        Image("loading_ic")
+                            .resizable()
+                            .frame(width: 150, height: 25)
+                        
+                        ForEach(1..<4) { i in
+                            Image("loading_point_ic")
+                                .resizable()
+                                .frame(width: 16, height: 16)
+                                .offset(y: animate ? -8 : 8) // Move up and down
+                                .animation(
+                                    Animation.easeInOut(duration: 0.6)
+                                        .repeatForever(autoreverses: true)
+                                        .delay(Double(i) * 0.1),
+                                    value: animate
+                                )
+                        }
+                    }
                     
                     Spacer()
                         .frame(height: isLandscape ? 30 : 100)
@@ -727,18 +751,17 @@ struct SplashView: View {
             
         }
         .ignoresSafeArea()
+        .onAppear {
+            animate = true
+        }
     }
     
 }
 
 
 #Preview {
-    NotificationPermissionView(
-        onYes: {
-        },
-        onSkip: {
-        }
-    )
+    SplashView()
+        .environmentObject(AppState())
 }
 
 // Main App
@@ -1757,6 +1780,8 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         attachNewBrowser(newBrowser)
         
         actionBroadcaster.broadcast(.showControl)
+        SignalDispatcher().dispatch(.revealPanel)
+        NotificationCenter.default.post(name: Notification.Name("show_panel"), object: nil)
         contentManager.additionalBrowsers.append(newBrowser)
         if shouldLoadRequest(in: newBrowser, with: navigationAction.request) {
             newBrowser.load(navigationAction.request)
@@ -1765,6 +1790,23 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        // Enforce no-zoom policy with viewport and CSS overrides
+        let script = """
+                var viewportMeta = document.createElement('meta');
+                viewportMeta.name = 'viewport';
+                viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+                document.getElementsByTagName('head')[0].appendChild(viewportMeta);
+                var cssOverride = document.createElement('style');
+                cssOverride.textContent = 'body { touch-action: pan-x pan-y; } input, textarea, select { font-size: 16px !important; maximum-scale=1.0; }';
+                document.getElementsByTagName('head')[0].appendChild(cssOverride);
+                document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+                """;
+        webView.evaluateJavaScript(script) { _, error in
+            if let error = error {
+                print("Script injection error: \(error)")
+            }
+        }
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(processNotification(_:)),
@@ -1810,14 +1852,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
             UIApplication.shared.open(link, options: [:], completionHandler: nil)
             decisionHandler(.cancel)
         }
-        
-//        let externalSchemes = ["tg://", "viber://", "whatsapp://"]
-//        if externalSchemes.contains(where: link.absoluteString.hasPrefix) {
-//            UIApplication.shared.open(link, options: [:], completionHandler: nil)
-//            decisionHandler(.cancel)
-//        } else {
-//            decisionHandler(.allow)
-//        }
     }
     
     @objc func processNotification(_ notification: Notification) {
@@ -1909,6 +1943,8 @@ struct BrowserCreator {
                 primary.load(URLRequest(url: link))
             }
             ActionBroadcaster().broadcast(.hideControl)
+            SignalDispatcher().dispatch(.concealPanel)
+            NotificationCenter.default.post(name: Notification.Name("hide_panel"), object: nil)
             return true
         } else if primary.canGoBack {
             primary.goBack()
@@ -2032,14 +2068,42 @@ struct IconActionButton: View {
     }
 }
 
+protocol EventResponder {
+    func respondToEvent(_ notification: Notification)
+}
+
+extension Notification.Name {
+    static let interfaceSignals = Notification.Name("view_signals")
+}
+
+enum ActionType: String {
+    case revealPanel = "show"
+    case concealPanel = "hide"
+    case navigatePrevious = "back"
+    case refreshView = "refresh"
+}
+
+class SignalDispatcher {
+    let signalStream = NotificationCenter.default.publisher(for: .interfaceSignals)
+    
+    func dispatch(_ action: ActionType) {
+        NotificationCenter.default.post(
+            name: .interfaceSignals,
+            object: nil,
+            userInfo: ["event": action.rawValue]
+        )
+    }
+}
+
 struct CoreInterfaceView: View {
     @StateObject private var barState = ControlBarState()
     private let broadcaster = ActionBroadcaster()
+    private let dispatcher = SignalDispatcher()
     
     var body: some View {
         ZStack(alignment: .bottom) {
             MainBrowserView(
-                destinationLink: URL(string: UserDefaults.standard.string(forKey: "app_response") ?? "")!
+                destinationLink: URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
             )
             .ignoresSafeArea(.all)
             
@@ -2052,21 +2116,21 @@ struct CoreInterfaceView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .onReceive(broadcaster.actionPublisher) { output in
-            guard let details = output.userInfo as? [String: String],
-                  let actionKey = details["action"] else { return }
-            processAction(actionKey)
+        .onReceive(dispatcher.signalStream) { input in
+            guard let details = input.userInfo as? [String: String],
+                  let signalKey = details["event"] else { return }
+            manageSignal(signalKey)
         }
     }
     
-    private func processAction(_ actionKey: String) {
-        switch actionKey {
-        case CommandType.showControl.rawValue:
-            withAnimation(.spring(response: 0.3)) {
+    private func manageSignal(_ signalKey: String) {
+        switch signalKey {
+        case ActionType.revealPanel.rawValue:
+            withAnimation(.spring(response: 0.35)) {
                 barState.isControlVisible = true
             }
-        case CommandType.hideControl.rawValue:
-            withAnimation(.spring(response: 0.3)) {
+        case ActionType.concealPanel.rawValue:
+            withAnimation(.spring(response: 0.35)) {
                 barState.isControlVisible = false
             }
         default:

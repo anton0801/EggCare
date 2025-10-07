@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "loading_ic-3.png",
+      "filename" : "loading_point_ic.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "loading_ic-4.png",
+      "filename" : "loading_point_ic-2.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
