@@ -504,8 +504,8 @@ class SplashViewModel: ObservableObject {
         
         if isFirstLaunch {
             if let afStatus = conversionData["af_status"] as? String, afStatus == "Organic" {
-//                self.setModeToFuntik()
-//                return
+                self.setModeToFuntik()
+                return
             }
         }
         
@@ -1779,9 +1779,7 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         setupNewBrowser(newBrowser)
         attachNewBrowser(newBrowser)
         
-        actionBroadcaster.broadcast(.showControl)
         SignalDispatcher().dispatch(.revealPanel)
-        NotificationCenter.default.post(name: Notification.Name("show_panel"), object: nil)
         contentManager.additionalBrowsers.append(newBrowser)
         if shouldLoadRequest(in: newBrowser, with: navigationAction.request) {
             newBrowser.load(navigationAction.request)
@@ -1832,7 +1830,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         if (error as NSError).code == NSURLErrorHTTPTooManyRedirects, let fallbackURL = lastValidURL {
             webView.load(URLRequest(url: fallbackURL))
         }
-        // Можно показать UI с ошибкой или лог для тестов
     }
     
     func webView(
@@ -1873,6 +1870,7 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         browser.scrollView.minimumZoomScale = 1.0
         browser.scrollView.maximumZoomScale = 1.0
         browser.scrollView.bouncesZoom = false
+        browser.allowsBackForwardNavigationGestures = true
         browser.navigationDelegate = self
         browser.uiDelegate = self
         contentManager.primaryBrowser.addSubview(browser)
@@ -1942,9 +1940,7 @@ struct BrowserCreator {
             if let link = currentLink {
                 primary.load(URLRequest(url: link))
             }
-            ActionBroadcaster().broadcast(.hideControl)
             SignalDispatcher().dispatch(.concealPanel)
-            NotificationCenter.default.post(name: Notification.Name("hide_panel"), object: nil)
             return true
         } else if primary.canGoBack {
             primary.goBack()
@@ -2024,6 +2020,10 @@ struct MainBrowserView: UIViewRepresentable {
         manager.primaryBrowser.uiDelegate = context.coordinator
         manager.primaryBrowser.navigationDelegate = context.coordinator
         
+        let edgePan = UIScreenEdgePanGestureRecognizer(target: context.coordinator, action: #selector((context.coordinator as! BrowserDelegateManager).handleEdgePan(_:)))
+        edgePan.edges = .left
+        manager.primaryBrowser.addGestureRecognizer(edgePan)
+        
         manager.loadStoredCookies()
         return manager.primaryBrowser
     }
@@ -2038,35 +2038,21 @@ struct MainBrowserView: UIViewRepresentable {
     
 }
 
-struct NavigationPanel: View {
-    let backHandler: () -> Void
-    let refreshHandler: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            IconActionButton(icon: "chevron.left", action: backHandler)
-            Spacer()
-            IconActionButton(icon: "arrow.triangle.2.circlepath", action: refreshHandler)
+extension BrowserDelegateManager {
+    @objc func handleEdgePan(_ recognizer: UIScreenEdgePanGestureRecognizer) {
+        if recognizer.state == .ended {
+            let currentView = contentManager.additionalBrowsers.last ?? contentManager.primaryBrowser
+            if let currentView = currentView {
+                if currentView.canGoBack {
+                    currentView.goBack()
+                } else if !contentManager.additionalBrowsers.isEmpty {
+                    contentManager.cleanAdditionalBrowsersIfNeeded(for: currentView.url)
+                }
+            }
         }
-        .padding(.horizontal, 12)
-        .frame(height: 52)
-        .background(Color.black.opacity(0.95))
     }
 }
 
-struct IconActionButton: View {
-    let icon: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 22))
-                .foregroundColor(.teal)
-                .frame(width: 36, height: 36)
-        }
-    }
-}
 
 protocol EventResponder {
     func respondToEvent(_ notification: Notification)
@@ -2096,47 +2082,18 @@ class SignalDispatcher {
 }
 
 struct CoreInterfaceView: View {
+    
     @StateObject private var barState = ControlBarState()
-    private let broadcaster = ActionBroadcaster()
-    private let dispatcher = SignalDispatcher()
     
     var body: some View {
         ZStack(alignment: .bottom) {
             MainBrowserView(
                 destinationLink: URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
             )
-            .ignoresSafeArea(.all)
-            
-            if barState.isControlVisible {
-                NavigationPanel(
-                    backHandler: { broadcaster.broadcast(.navigateBack) },
-                    refreshHandler: { broadcaster.broadcast(.reloadContent) }
-                )
-                .transition(.move(edge: .bottom))
-            }
         }
         .preferredColorScheme(.dark)
-        .onReceive(dispatcher.signalStream) { input in
-            guard let details = input.userInfo as? [String: String],
-                  let signalKey = details["event"] else { return }
-            manageSignal(signalKey)
-        }
     }
     
-    private func manageSignal(_ signalKey: String) {
-        switch signalKey {
-        case ActionType.revealPanel.rawValue:
-            withAnimation(.spring(response: 0.35)) {
-                barState.isControlVisible = true
-            }
-        case ActionType.concealPanel.rawValue:
-            withAnimation(.spring(response: 0.35)) {
-                barState.isControlVisible = false
-            }
-        default:
-            break
-        }
-    }
 }
 
 protocol NotificationProcessor {
