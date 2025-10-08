@@ -10,6 +10,8 @@
 		8F0A5F472E8FE76E00D9D970 /* AppsFlyerLib in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F462E8FE76E00D9D970 /* AppsFlyerLib */; };
 		8F0A5F4A2E8FE79200D9D970 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F492E8FE79200D9D970 /* FirebaseAnalytics */; };
 		8F0A5F4C2E8FE79200D9D970 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F0A5F4B2E8FE79200D9D970 /* FirebaseMessaging */; };
+		8F8BF77E2E96A9EA00BFD40F /* ImageNotificationServiceExt.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8F8BF7772E96A9EA00BFD40F /* ImageNotificationServiceExt.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8F8BF7862E96AA0E00BFD40F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 8F8BF7852E96AA0E00BFD40F /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,14 +29,46 @@
 			remoteGlobalIDString = 8F0A5C702E86E2F600D9D970;
 			remoteInfo = ChickenCare;
 		};
+		8F8BF77C2E96A9EA00BFD40F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F0A5C692E86E2F600D9D970 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F8BF7762E96A9EA00BFD40F;
+			remoteInfo = ImageNotificationServiceExt;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F8BF7832E96A9EA00BFD40F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				8F8BF77E2E96A9EA00BFD40F /* ImageNotificationServiceExt.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8F0A5C712E86E2F600D9D970 /* ChickCare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChickCare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A5C7F2E86E2F800D9D970 /* ChickCareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickCareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A5C892E86E2F800D9D970 /* ChickCareUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ChickCareUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0A5F4D2E8FECAB00D9D970 /* ChickCare-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "ChickCare-Info.plist"; sourceTree = "<group>"; };
+		8F8BF7772E96A9EA00BFD40F /* ImageNotificationServiceExt.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ImageNotificationServiceExt.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8F8BF77F2E96A9EA00BFD40F /* Exceptions for "ImageNotificationServiceExt" folder in "ImageNotificationServiceExt" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8F8BF7762E96A9EA00BFD40F /* ImageNotificationServiceExt */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8F0A5C732E86E2F600D9D970 /* ChickenCare */ = {
@@ -50,6 +84,14 @@
 		8F0A5C8C2E86E2F800D9D970 /* ChickenCareUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = ChickenCareUITests;
+			sourceTree = "<group>";
+		};
+		8F8BF7782E96A9EA00BFD40F /* ImageNotificationServiceExt */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8F8BF77F2E96A9EA00BFD40F /* Exceptions for "ImageNotificationServiceExt" folder in "ImageNotificationServiceExt" target */,
+			);
+			path = ImageNotificationServiceExt;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +121,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F8BF7742E96A9EA00BFD40F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F8BF7862E96AA0E00BFD40F /* FirebaseMessaging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -89,6 +139,8 @@
 				8F0A5C732E86E2F600D9D970 /* ChickenCare */,
 				8F0A5C822E86E2F800D9D970 /* ChickenCareTests */,
 				8F0A5C8C2E86E2F800D9D970 /* ChickenCareUITests */,
+				8F8BF7782E96A9EA00BFD40F /* ImageNotificationServiceExt */,
+				8F8BF7842E96AA0E00BFD40F /* Frameworks */,
 				8F0A5C722E86E2F600D9D970 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -99,8 +151,16 @@
 				8F0A5C712E86E2F600D9D970 /* ChickCare.app */,
 				8F0A5C7F2E86E2F800D9D970 /* ChickCareTests.xctest */,
 				8F0A5C892E86E2F800D9D970 /* ChickCareUITests.xctest */,
+				8F8BF7772E96A9EA00BFD40F /* ImageNotificationServiceExt.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8F8BF7842E96AA0E00BFD40F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -113,10 +173,12 @@
 				8F0A5C6D2E86E2F600D9D970 /* Sources */,
 				8F0A5C6E2E86E2F600D9D970 /* Frameworks */,
 				8F0A5C6F2E86E2F600D9D970 /* Resources */,
+				8F8BF7832E96A9EA00BFD40F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				8F8BF77D2E96A9EA00BFD40F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				8F0A5C732E86E2F600D9D970 /* ChickenCare */,
@@ -177,6 +239,29 @@
 			productReference = 8F0A5C892E86E2F800D9D970 /* ChickCareUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		8F8BF7762E96A9EA00BFD40F /* ImageNotificationServiceExt */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F8BF7802E96A9EA00BFD40F /* Build configuration list for PBXNativeTarget "ImageNotificationServiceExt" */;
+			buildPhases = (
+				8F8BF7732E96A9EA00BFD40F /* Sources */,
+				8F8BF7742E96A9EA00BFD40F /* Frameworks */,
+				8F8BF7752E96A9EA00BFD40F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				8F8BF7782E96A9EA00BFD40F /* ImageNotificationServiceExt */,
+			);
+			name = ImageNotificationServiceExt;
+			packageProductDependencies = (
+				8F8BF7852E96AA0E00BFD40F /* FirebaseMessaging */,
+			);
+			productName = ImageNotificationServiceExt;
+			productReference = 8F8BF7772E96A9EA00BFD40F /* ImageNotificationServiceExt.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -197,6 +282,9 @@
 					8F0A5C882E86E2F800D9D970 = {
 						CreatedOnToolsVersion = 16.4;
 						TestTargetID = 8F0A5C702E86E2F600D9D970;
+					};
+					8F8BF7762E96A9EA00BFD40F = {
+						CreatedOnToolsVersion = 16.4;
 					};
 				};
 			};
@@ -221,6 +309,7 @@
 				8F0A5C702E86E2F600D9D970 /* ChickCare */,
 				8F0A5C7E2E86E2F800D9D970 /* ChickCareTests */,
 				8F0A5C882E86E2F800D9D970 /* ChickCareUITests */,
+				8F8BF7762E96A9EA00BFD40F /* ImageNotificationServiceExt */,
 			);
 		};
 /* End PBXProject section */
@@ -241,6 +330,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		8F0A5C872E86E2F800D9D970 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F8BF7752E96A9EA00BFD40F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -271,6 +367,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8F8BF7732E96A9EA00BFD40F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -283,6 +386,11 @@
 			isa = PBXTargetDependency;
 			target = 8F0A5C702E86E2F600D9D970 /* ChickCare */;
 			targetProxy = 8F0A5C8A2E86E2F800D9D970 /* PBXContainerItemProxy */;
+		};
+		8F8BF77D2E96A9EA00BFD40F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F8BF7762E96A9EA00BFD40F /* ImageNotificationServiceExt */;
+			targetProxy = 8F8BF77C2E96A9EA00BFD40F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -408,7 +516,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -451,7 +559,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ChickenCare/ChickenCare.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -573,6 +681,69 @@
 			};
 			name = Release;
 		};
+		8F8BF7812E96A9EA00BFD40F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ImageNotificationServiceExt/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ImageNotificationServiceExt;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare.ImageNotificationServiceExt;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		8F8BF7822E96A9EA00BFD40F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ImageNotificationServiceExt/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ImageNotificationServiceExt;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appgroupsofchick.ChickCare.ImageNotificationServiceExt;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -612,6 +783,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		8F8BF7802E96A9EA00BFD40F /* Build configuration list for PBXNativeTarget "ImageNotificationServiceExt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F8BF7812E96A9EA00BFD40F /* Debug */,
+				8F8BF7822E96A9EA00BFD40F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -645,6 +825,11 @@
 			productName = FirebaseAnalytics;
 		};
 		8F0A5F4B2E8FE79200D9D970 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		8F8BF7852E96AA0E00BFD40F /* FirebaseMessaging */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8F0A5F482E8FE79200D9D970 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;

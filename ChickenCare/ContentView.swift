@@ -23,15 +23,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         AppsFlyerLib.shared().delegate = self
         AppsFlyerLib.shared().start()
         
-        // Firebase Messaging delegate
+        // Firebase Messaging delegat
         Messaging.messaging().delegate = self
         
-        // UNUserNotificationCenter delegate
         UNUserNotificationCenter.current().delegate = self
-        
-        // Register for remote notifications
-        // application.registerForRemoteNotifications()
-        
+       
         // Handle launch from notification
         if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
             handleNotificationPayload(remoteNotification)
@@ -142,7 +138,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String, let url = URL(string: urlString) {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
             }
         }
     }
@@ -443,7 +439,7 @@ class SplashViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionData(_:)), name: NSNotification.Name("ConversionDataReceived"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionError(_:)), name: NSNotification.Name("ConversionDataFailed"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleFCMToken(_:)), name: NSNotification.Name("FCMTokenUpdated"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("NotificationURLReceived"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("LoadTempURL"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(retryConfig), name: NSNotification.Name("RetryConfig"), object: nil)
         
         // Start processing
@@ -486,12 +482,14 @@ class SplashViewModel: ObservableObject {
     }
     
     @objc private func handleNotificationURL(_ notification: Notification) {
-        if let urlString = notification.object as? String, let url = URL(string: urlString) {
-            // Use temporary URL, do not save
-            DispatchQueue.main.async {
-                self.webViewURL = url
-                self.currentScreen = .webView
-            }
+        guard let userInfo = notification.userInfo as? [String: Any],
+              let tempUrl = userInfo["tempUrl"] as? String else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.webViewURL = URL(string: tempUrl)!
+            self.currentScreen = .webView
         }
     }
     
@@ -502,6 +500,13 @@ class SplashViewModel: ObservableObject {
     private func processConversionData() {
         guard !conversionData.isEmpty else { return }
         
+        if UserDefaults.standard.string(forKey: "app_mode") == "Funtik" {
+            DispatchQueue.main.async {
+                self.currentScreen = .funtik
+            }
+            return
+        }
+        
         if isFirstLaunch {
             if let afStatus = conversionData["af_status"] as? String, afStatus == "Organic" {
                 self.setModeToFuntik()
@@ -509,10 +514,13 @@ class SplashViewModel: ObservableObject {
             }
         }
         
-        if !UserDefaults.standard.bool(forKey: "accepted_notifications") && !UserDefaults.standard.bool(forKey: "system_close_notifications") {
-            checkAndShowNotificationScreen()
-        } else {
-            sendConfigRequest()
+        // усли не с пуша открыли запрашиваем
+        if webViewURL == nil {
+            if !UserDefaults.standard.bool(forKey: "accepted_notifications") && !UserDefaults.standard.bool(forKey: "system_close_notifications") {
+                checkAndShowNotificationScreen()
+            } else {
+                sendConfigRequest()
+            }
         }
     }
     
@@ -1737,9 +1745,8 @@ struct StatCard: View {
     }
 }
 
-class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, NotificationProcessor {
+class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate {
     private let contentManager: ContentManager
-    private let actionBroadcaster = ActionBroadcaster()
     
     private var redirectCount: Int = 0
     private let maxRedirects: Int = 70 // Для тестов
@@ -1771,7 +1778,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         windowFeatures: WKWindowFeatures
     ) -> WKWebView? {
         guard navigationAction.targetFrame == nil else {
-            actionBroadcaster.broadcast(.hideControl)
             return nil
         }
         
@@ -1779,7 +1785,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         setupNewBrowser(newBrowser)
         attachNewBrowser(newBrowser)
         
-        SignalDispatcher().dispatch(.revealPanel)
         contentManager.additionalBrowsers.append(newBrowser)
         if shouldLoadRequest(in: newBrowser, with: navigationAction.request) {
             newBrowser.load(navigationAction.request)
@@ -1805,12 +1810,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
             }
         }
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processNotification(_:)),
-            name: .interfaceActions,
-            object: nil
-        )
     }
     
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
@@ -1851,19 +1850,6 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         }
     }
     
-    @objc func processNotification(_ notification: Notification) {
-        guard let data = notification.userInfo as? [String: String],
-              let actionType = data["action"] else { return }
-        switch actionType {
-        case CommandType.navigateBack.rawValue:
-            contentManager.cleanAdditionalBrowsersIfNeeded(for: contentManager.primaryBrowser.url)
-        case CommandType.reloadContent.rawValue:
-            contentManager.refreshContent()
-        default:
-            break
-        }
-    }
-    
     private func setupNewBrowser(_ browser: WKWebView) {
         browser.translatesAutoresizingMaskIntoConstraints = false
         browser.scrollView.isScrollEnabled = true
@@ -1874,6 +1860,11 @@ class BrowserDelegateManager: NSObject, WKNavigationDelegate, WKUIDelegate, Noti
         browser.navigationDelegate = self
         browser.uiDelegate = self
         contentManager.primaryBrowser.addSubview(browser)
+        
+        // Добавляем свайп для наложенного WKWebView
+        let edgePan = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(handleEdgePan(_:)))
+        edgePan.edges = .left
+        browser.addGestureRecognizer(edgePan)
     }
     
     private func attachNewBrowser(_ browser: WKWebView) {
@@ -1940,7 +1931,6 @@ struct BrowserCreator {
             if let link = currentLink {
                 primary.load(URLRequest(url: link))
             }
-            SignalDispatcher().dispatch(.concealPanel)
             return true
         } else if primary.canGoBack {
             primary.goBack()
@@ -1948,29 +1938,6 @@ struct BrowserCreator {
         }
         return false
     }
-}
-
-class ControlBarState: ObservableObject {
-    @Published var isControlVisible: Bool = false
-}
-
-class ActionBroadcaster {
-    let actionPublisher = NotificationCenter.default.publisher(for: .interfaceActions)
-    
-    func broadcast(_ command: CommandType) {
-        NotificationCenter.default.post(
-            name: .interfaceActions,
-            object: nil,
-            userInfo: ["action": command.rawValue]
-        )
-    }
-}
-
-enum CommandType: String {
-    case showControl = "display"
-    case hideControl = "conceal"
-    case navigateBack = "previous"
-    case reloadContent = "update"
 }
 
 extension Notification.Name {
@@ -2005,10 +1972,35 @@ class ContentManager: ObservableObject {
     }
     
     func cleanAdditionalBrowsersIfNeeded(for link: URL?) {
-        if BrowserCreator.shouldCleanAdditional(primaryBrowser, additionalBrowsers, currentLink: link) {
-            additionalBrowsers.removeAll()
+//        if BrowserCreator.shouldCleanAdditional(primaryBrowser, additionalBrowsers, currentLink: link) {
+//            additionalBrowsers.removeAll()
+//        }
+        
+        
+    }
+    
+    func shouldCleanAdditional(currentLink: URL?) {
+        if !additionalBrowsers.isEmpty {
+            if let lastOverlay = additionalBrowsers.last {
+                lastOverlay.removeFromSuperview()
+                additionalBrowsers.removeLast()
+            }
+            if let link = currentLink {
+                primaryBrowser.load(URLRequest(url: link))
+            }
+        } else if primaryBrowser.canGoBack {
+            primaryBrowser.goBack()
         }
     }
+    
+    func closeTopOverlay() {
+        if let lastOverlay = additionalBrowsers.last {
+            lastOverlay.removeFromSuperview()
+            additionalBrowsers.removeLast()
+            //objectWillChange.send()
+        }
+    }
+    
 }
 
 struct MainBrowserView: UIViewRepresentable {
@@ -2019,17 +2011,14 @@ struct MainBrowserView: UIViewRepresentable {
         manager.setupPrimaryBrowser()
         manager.primaryBrowser.uiDelegate = context.coordinator
         manager.primaryBrowser.navigationDelegate = context.coordinator
-        
-        let edgePan = UIScreenEdgePanGestureRecognizer(target: context.coordinator, action: #selector((context.coordinator as! BrowserDelegateManager).handleEdgePan(_:)))
-        edgePan.edges = .left
-        manager.primaryBrowser.addGestureRecognizer(edgePan)
-        
+    
         manager.loadStoredCookies()
+        manager.primaryBrowser.load(URLRequest(url: destinationLink))
         return manager.primaryBrowser
     }
     
     func updateUIView(_ browser: WKWebView, context: Context) {
-        browser.load(URLRequest(url: destinationLink))
+        // browser.load(URLRequest(url: destinationLink))
     }
     
     func makeCoordinator() -> BrowserDelegateManager {
@@ -2039,51 +2028,31 @@ struct MainBrowserView: UIViewRepresentable {
 }
 
 extension BrowserDelegateManager {
+//    @objc func handleEdgePan(_ recognizer: UIScreenEdgePanGestureRecognizer) {
+//        if recognizer.state == .ended {
+//            let currentView = contentManager.additionalBrowsers.last ?? contentManager.primaryBrowser
+//            if let currentView = currentView {
+//                if currentView.canGoBack {
+//                    currentView.goBack()
+//                } else if !contentManager.additionalBrowsers.isEmpty {
+//                    contentManager.cleanAdditionalBrowsersIfNeeded(for: currentView.url)
+//                }
+//            }
+//        }
+//    }
     @objc func handleEdgePan(_ recognizer: UIScreenEdgePanGestureRecognizer) {
         if recognizer.state == .ended {
-            let currentView = contentManager.additionalBrowsers.last ?? contentManager.primaryBrowser
-            if let currentView = currentView {
-                if currentView.canGoBack {
-                    currentView.goBack()
-                } else if !contentManager.additionalBrowsers.isEmpty {
-                    contentManager.cleanAdditionalBrowsersIfNeeded(for: currentView.url)
-                }
+            guard let currentView = recognizer.view as? WKWebView else { return }
+            if currentView.canGoBack {
+                currentView.goBack()
+            } else if let lastOverlay = contentManager.additionalBrowsers.last, currentView == lastOverlay {
+                contentManager.shouldCleanAdditional(currentLink: nil)
             }
         }
     }
 }
 
-
-protocol EventResponder {
-    func respondToEvent(_ notification: Notification)
-}
-
-extension Notification.Name {
-    static let interfaceSignals = Notification.Name("view_signals")
-}
-
-enum ActionType: String {
-    case revealPanel = "show"
-    case concealPanel = "hide"
-    case navigatePrevious = "back"
-    case refreshView = "refresh"
-}
-
-class SignalDispatcher {
-    let signalStream = NotificationCenter.default.publisher(for: .interfaceSignals)
-    
-    func dispatch(_ action: ActionType) {
-        NotificationCenter.default.post(
-            name: .interfaceSignals,
-            object: nil,
-            userInfo: ["event": action.rawValue]
-        )
-    }
-}
-
 struct CoreInterfaceView: View {
-    
-    @StateObject private var barState = ControlBarState()
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -2096,6 +2065,3 @@ struct CoreInterfaceView: View {
     
 }
 
-protocol NotificationProcessor {
-    func processNotification(_ notification: Notification)
-}
