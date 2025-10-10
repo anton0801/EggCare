@@ -134,6 +134,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         completionHandler()
     }
     
+    func application(_ application: UIApplication,
+                             didReceiveRemoteNotification userInfo: [AnyHashable : Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        completionHandler(.newData)
+    }
+    
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
         if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String, let url = URL(string: urlString) {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
