@@ -2109,8 +2109,10 @@ struct CoreInterfaceView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LoadTempURL"))) { _ in
-            intercaceUrl = UserDefaults.standard.string(forKey: "temp_url") ?? ""
-            UserDefaults.standard.set(nil, forKey: "temp_url")
+            if (UserDefaults.standard.string(forKey: "temp_url") ?? "") != "" {
+                intercaceUrl = UserDefaults.standard.string(forKey: "temp_url") ?? ""
+                UserDefaults.standard.set(nil, forKey: "temp_url")
+            }
         }
     }
     
