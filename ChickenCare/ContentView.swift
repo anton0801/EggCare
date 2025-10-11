@@ -28,10 +28,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         
         UNUserNotificationCenter.current().delegate = self
         
-//        if UserDefaults.standard.bool(forKey: "accepted_notifications") {
-//            application.registerForRemoteNotifications()
-//        }
         application.registerForRemoteNotifications()
+        
+        if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
+            handleNotificationPayload(remoteNotification)
+        }
         
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { path in
@@ -41,7 +42,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
             }
         }
         monitor.start(queue: DispatchQueue.global())
-        
         
         NotificationCenter.default.addObserver(
             self,
@@ -137,13 +137,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
     func application(_ application: UIApplication,
                              didReceiveRemoteNotification userInfo: [AnyHashable : Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
-        
+        handleNotificationPayload(userInfo)
         completionHandler(.newData)
     }
     
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
         NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": userInfo])
-        if let urlString = userInfo["url"] as? String {
+        //        if let urlString = userInfo["url"] as? String {
+        //            UserDefaults.standard.set(urlString, forKey: "temp_url")
+        //            DispatchQueue.main.async {
+        //                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
+        //            }
+        //        }
+        var urlString: String?
+        if let url = userInfo["url"] as? String {
+            urlString = url
+        } else if let data = userInfo["data"] as? [String: Any], let url = data["url"] as? String {
+            urlString = url
+        }
+        
+        if let urlString = urlString {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
