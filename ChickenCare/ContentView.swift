@@ -143,7 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
     
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
         NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": userInfo])
-        if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String {
+        if let urlString = userInfo["url"] as? String {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
