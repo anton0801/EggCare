@@ -28,9 +28,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         
         UNUserNotificationCenter.current().delegate = self
         
-        if UserDefaults.standard.bool(forKey: "accepted_notifications") {
-            application.registerForRemoteNotifications()
-        }
+//        if UserDefaults.standard.bool(forKey: "accepted_notifications") {
+//            application.registerForRemoteNotifications()
+//        }
+        application.registerForRemoteNotifications()
         
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { path in
@@ -718,7 +719,7 @@ struct SplashView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("show_alert"))) { notification in
-            guard let data = (notification.userInfo as? [String: Any])?["data"] as? [String: Any] else { return }
+            let data = (notification.userInfo as? [String: Any])?["data"] as? [String: Any]
             alertVisible = true
             alertMessage = "data: \(data)"
         }
