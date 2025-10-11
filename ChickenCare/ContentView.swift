@@ -158,7 +158,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         
         if let urlString = urlString {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
-            DispatchQueue.main.async {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                 NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
             }
         }
@@ -460,7 +460,7 @@ class SplashViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionData(_:)), name: NSNotification.Name("ConversionDataReceived"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionError(_:)), name: NSNotification.Name("ConversionDataFailed"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleFCMToken(_:)), name: NSNotification.Name("FCMTokenUpdated"), object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("LoadTempURL"), object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("LoadTempURL"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(retryConfig), name: NSNotification.Name("RetryConfig"), object: nil)
         
         // Start processing
@@ -533,6 +533,13 @@ class SplashViewModel: ObservableObject {
                 self.setModeToFuntik()
                 return
             }
+        }
+        
+        if let link = UserDefaults.standard.string(forKey: "temp_url"), !link.isEmpty {
+            webViewURL = URL(string: link)
+            self.currentScreen = .webView
+            UserDefaults.standard.set(nil, forKey: "temp_url")
+            return
         }
         
         // усли не с пуша открыли запрашиваем
