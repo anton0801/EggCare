@@ -27,10 +27,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
         Messaging.messaging().delegate = self
         
         UNUserNotificationCenter.current().delegate = self
-       
-        // Handle launch from notification
-        if let remoteNotification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
-            handleNotificationPayload(remoteNotification)
+        
+        if UserDefaults.standard.bool(forKey: "accepted_notifications") {
+            application.registerForRemoteNotifications()
         }
         
         let monitor = NWPathMonitor()
@@ -137,11 +136,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
     func application(_ application: UIApplication,
                              didReceiveRemoteNotification userInfo: [AnyHashable : Any],
                      fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        
         completionHandler(.newData)
     }
     
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
-        if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String, let url = URL(string: urlString) {
+        NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": userInfo])
+        if let data = userInfo["data"] as? [String: Any], let urlString = data["url"] as? String {
             UserDefaults.standard.set(urlString, forKey: "temp_url")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
@@ -674,6 +675,9 @@ struct SplashView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = SplashViewModel()
     
+    @State var alertVisible = false
+    @State var alertMessage = ""
+    
     var body: some View {
         ZStack {
             if viewModel.currentScreen == .loading || viewModel.showNotificationScreen {
@@ -712,6 +716,14 @@ struct SplashView: View {
                     }
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("show_alert"))) { notification in
+            guard let data = (notification.userInfo as? [String: Any])?["data"] as? [String: Any] else { return }
+            alertVisible = true
+            alertMessage = "data: \(data)"
+        }
+        .alert(isPresented: $alertVisible) {
+            Alert(title: Text("Alert"), message: Text(alertMessage))
         }
     }
     
