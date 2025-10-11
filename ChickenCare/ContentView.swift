@@ -2093,13 +2093,25 @@ extension BrowserDelegateManager {
 
 struct CoreInterfaceView: View {
     
+    @State var intercaceUrl: String = ""
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             MainBrowserView(
-                destinationLink: URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
+                destinationLink: URL(string: intercaceUrl)! //URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
             )
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            intercaceUrl = UserDefaults.standard.string(forKey: "temp_url") ?? (UserDefaults.standard.string(forKey: "saved_url") ?? "")
+            if let l = UserDefaults.standard.string(forKey: "temp_url"), !l.isEmpty {
+                UserDefaults.standard.set(nil, forKey: "temp_url")
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LoadTempURL"))) { _ in
+            intercaceUrl = UserDefaults.standard.string(forKey: "temp_url") ?? ""
+            UserDefaults.standard.set(nil, forKey: "temp_url")
+        }
     }
     
 }
