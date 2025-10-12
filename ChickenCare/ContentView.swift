@@ -142,13 +142,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppsFlyerLibDelegate, Mes
     }
     
     private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
-        NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": userInfo])
-        //        if let urlString = userInfo["url"] as? String {
-        //            UserDefaults.standard.set(urlString, forKey: "temp_url")
-        //            DispatchQueue.main.async {
-        //                NotificationCenter.default.post(name: NSNotification.Name("LoadTempURL"), object: nil, userInfo: ["tempUrl": urlString])
-        //            }
-        //        }
         var urlString: String?
         if let url = userInfo["url"] as? String {
             urlString = url
@@ -460,7 +453,6 @@ class SplashViewModel: ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionData(_:)), name: NSNotification.Name("ConversionDataReceived"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleConversionError(_:)), name: NSNotification.Name("ConversionDataFailed"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleFCMToken(_:)), name: NSNotification.Name("FCMTokenUpdated"), object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(handleNotificationURL(_:)), name: NSNotification.Name("LoadTempURL"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(retryConfig), name: NSNotification.Name("RetryConfig"), object: nil)
         
         // Start processing
@@ -538,7 +530,7 @@ class SplashViewModel: ObservableObject {
         if let link = UserDefaults.standard.string(forKey: "temp_url"), !link.isEmpty {
             webViewURL = URL(string: link)
             self.currentScreen = .webView
-            UserDefaults.standard.set(nil, forKey: "temp_url")
+            NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": "url: \(link) link received and no config reuqest"])
             return
         }
         
@@ -2099,7 +2091,7 @@ struct CoreInterfaceView: View {
         ZStack(alignment: .bottom) {
             if let u = URL(string: intercaceUrl) {
                 MainBrowserView(
-                    destinationLink: u //URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
+                    destinationLink: u
                 )
             }
         }
