@@ -530,7 +530,6 @@ class SplashViewModel: ObservableObject {
         if let link = UserDefaults.standard.string(forKey: "temp_url"), !link.isEmpty {
             webViewURL = URL(string: link)
             self.currentScreen = .webView
-            NotificationCenter.default.post(name: Notification.Name("show_alert"), object: nil, userInfo: ["data": "url: \(link) link received and no config reuqest"])
             return
         }
         
