@@ -2097,9 +2097,11 @@ struct CoreInterfaceView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            MainBrowserView(
-                destinationLink: URL(string: intercaceUrl)! //URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
-            )
+            if let u = URL(string: intercaceUrl) {
+                MainBrowserView(
+                    destinationLink: u //URL(string: UserDefaults.standard.string(forKey: "saved_url") ?? "")!
+                )
+            }
         }
         .preferredColorScheme(.dark)
         .onAppear {
