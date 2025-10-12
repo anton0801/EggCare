@@ -731,7 +731,7 @@ struct SplashView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("show_alert"))) { notification in
-            let data = (notification.userInfo as? [String: Any])?["data"] as? [String: Any]
+            let data = (notification.userInfo as? [String: Any])?["data"] as? String
             alertVisible = true
             alertMessage = "data: \(data)"
         }
