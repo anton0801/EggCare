@@ -2092,6 +2092,8 @@ struct CoreInterfaceView: View {
                 MainBrowserView(
                     destinationLink: u
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
             }
         }
         .preferredColorScheme(.dark)
